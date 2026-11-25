@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Filament\Resources\IncidentResource\Pages\EditIncident;
+use App\Filament\Resources\IncidentResource\Pages\ListIncidents;
 use App\Models\Incident;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -57,5 +58,26 @@ class IncidentPicRolesTest extends TestCase
 
         $this->assertSame([$picIncident->id], $incident->fresh()->picIncident->pluck('id')->all());
         $this->assertEmpty($incident->fresh()->pics, 'PIC Incident must NOT write the main pics pivot');
+    }
+
+    public function test_incident_list_shows_both_pic_columns(): void
+    {
+        foreach (['view incidents', 'manage incidents'] as $p) {
+            Permission::firstOrCreate(['name' => $p]);
+        }
+        $manager = User::factory()->create()->givePermissionTo('view incidents', 'manage incidents');
+        $techRisk = User::factory()->create(['name' => 'Rina Techrisk']);
+        $picIncident = User::factory()->create(['name' => 'Ian Cident']);
+        $incident = Incident::factory()->create();
+        $incident->pics()->sync([$techRisk->id]);
+        $incident->picIncident()->sync([$picIncident->id]);
+
+        Livewire::actingAs($manager)
+            ->test(ListIncidents::class)
+            ->assertTableColumnExists('picIncident.name')
+            ->assertSee('PIC Tech Risk')
+            ->assertSee('PIC Incident')
+            ->assertSee('Rina Techrisk')
+            ->assertSee('Ian Cident');
     }
 }

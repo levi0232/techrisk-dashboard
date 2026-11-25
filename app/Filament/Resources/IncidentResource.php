@@ -437,7 +437,7 @@ class IncidentResource extends Resource
     {
         return $table
             ->modifyQueryUsing(fn (Builder $query) => self::applyAccessControl($query))
-            ->modifyQueryUsing(fn (Builder $query) => $query->with(['pics', 'incidentType', 'labels', 'superIncident:id,no,title', 'statusUpdates' => fn ($u) => $u->orderByDesc('update_date')->orderByDesc('id')]))
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['pics', 'picIncident', 'incidentType', 'labels', 'superIncident:id,no,title', 'statusUpdates' => fn ($u) => $u->orderByDesc('update_date')->orderByDesc('id')]))
             ->modifyQueryUsing(fn (Builder $query) => $query->withCount('subIncidents')) // PROJ-022 chevron/badge visibility
             // PROJ-022 (owner 2026-11-16): the super's money display is the
             // family total — carry the sub sums in one query so the money
@@ -562,7 +562,8 @@ class IncidentResource extends Resource
                     ->color(fn (?string $state): string => $state === Incident::FLAG_NEED_UPDATE ? 'danger' : 'warning')
                     ->state(fn (Incident $record): ?string => $record->statusUpdateFlag()),
                 TextColumn::make('fund_status')->badge()->color(fn (?FundStatus $state): string => $state?->color() ?? 'gray')->sortable()->toggleable()->width('120px'),
-                TextColumn::make('pics.name')->label('PIC')->badge()->toggleable()->width('100px'),
+                TextColumn::make('pics.name')->label('PIC Tech Risk')->badge()->toggleable()->width('100px'),
+                TextColumn::make('picIncident.name')->label('PIC Incident')->badge()->toggleable()->width('100px'),
                 TextColumn::make('incident_date')->dateTime()->sortable()->width('100px'),
                 // PROJ-022 (owner 2026-11-16): a super's money columns show
                 // the FAMILY total (itself + subs); subs and standalones keep
